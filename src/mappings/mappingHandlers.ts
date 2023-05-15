@@ -7,21 +7,21 @@ import { StarterEntity } from "../types";
 import { Balance } from "@polkadot/types/interfaces";
 
 export async function handleBlock(block: SubstrateBlock): Promise<void> {
-
   if(block.block.header.number.toNumber() > 1000){
-    throw new Error(`EXIT!`)
+    return
   }
   //Create a new starterEntity with ID using block hash
   let record = new StarterEntity(block.block.header.hash.toString());
   //Record block number
   record.field1 = block.block.header.number.toNumber();
-  await record.save();
+    await record.save();
+
 }
 
 
 export async function handleBlockUpdate(block: SubstrateBlock): Promise<void> {
 
-  if(block.block.header.number.toNumber() % 1000 == 0){
+  if(block.block.header.number.toNumber() === 1000){
     logger.info(`=======================================`)
     const allEntities = await store.getByField('StarterEntity','field5',1,{limit:2000}) as StarterEntity[]
     await Promise.all(allEntities.map(e=>{
@@ -41,6 +41,10 @@ export async function handleBlockUpdate(block: SubstrateBlock): Promise<void> {
 
 
 export async function handleEvent(event: SubstrateEvent): Promise<void> {
+
+  if(event.block.block.header.number.toNumber() > 1000){
+    return
+  }
   const {
     event: {
       data: [account, balance],
@@ -53,10 +57,15 @@ export async function handleEvent(event: SubstrateEvent): Promise<void> {
   record.field2 = account.toString();
   //Big integer type Balance of a transfer event
   record.field3 = (balance as Balance).toBigInt();
+
   await record.save();
+
 }
 
 export async function handleCall(extrinsic: SubstrateExtrinsic): Promise<void> {
+  if(extrinsic.block.block.header.number.toNumber() > 1000){
+    return
+  }
   const record = await StarterEntity.get(
       extrinsic.block.block.header.hash.toString()
   );
