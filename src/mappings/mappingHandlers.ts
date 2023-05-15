@@ -30,10 +30,11 @@ export async function handleBlockUpdate(block: SubstrateBlock): Promise<void> {
     logger.info(`removed ${allEntities.length} entities, at block ${block.block.header.number.toNumber()}`)
     const filteredEntities = allEntities.filter(e=> e.field1 <= 970 && e.field1 > 20 ).sort((a, b) => a.field1-b.field1)
     logger.info(`Recreate entity [${filteredEntities[0].field1}-${filteredEntities[filteredEntities.length-1].field1}]`)
-    await Promise.all(filteredEntities.map(e=>{
+    const updated = filteredEntities.map(e=>{
       (e as StarterEntity).field5 = 2
-      store.set('StarterEntity', e.id, e);
-    }))
+      return e
+    })
+    await store.bulkCreate('StarterEntity',updated)
     logger.info(`Recreated ${filteredEntities.length} entities`)
     logger.info(`=======================================`)
   }
